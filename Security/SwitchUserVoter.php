@@ -28,7 +28,7 @@ class SwitchUserVoter extends Voter
         return 'CAN_SWITCH_USER' === $attribute && $subject instanceof UserInterface;
     }
 
-    protected function voteOnAttribute(string $attribute, $subject, TokenInterface $token)
+    protected function voteOnAttribute($attribute, $subject, TokenInterface $token)
     {
         $user = $token->getUser();
         if (!$user instanceof UserInterface || !$subject instanceof UserInterface) {
