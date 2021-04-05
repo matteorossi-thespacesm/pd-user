@@ -22,12 +22,13 @@ use Symfony\Contracts\EventDispatcher\Event;
  */
 class UserEvent extends Event
 {
-    public const REGISTER_BEFORE = 'user.register_before';
-    public const REGISTER = 'user.register';
-    public const REGISTER_CONFIRM = 'user.register_confirm';
-    public const RESETTING = 'user.resetting';
+    public const REGISTER_BEFORE    = 'user.register_before';
+    public const REGISTER           = 'user.register';
+    public const REGISTER_FAILURE   = 'user.register.failure';
+    public const REGISTER_CONFIRM   = 'user.register_confirm';
+    public const RESETTING          = 'user.resetting';
     public const RESETTING_COMPLETE = 'user.resetting_complete';
-
+    
     /**
      * @var UserInterface
      */
