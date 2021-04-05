@@ -52,14 +52,23 @@ class SecurityController extends AbstractController
             'user_registration' => $this->getParameter('user_registration'),
         ]);
     }
-
+    
     /**
      * Registration.
-     *
+     * 
+     * @param Request $request
+     * @param EventDispatcherInterface $dispatcher
+     * @param TranslatorInterface $translator
+     * @param UserPasswordEncoderInterface $encoder
+     * @param MailerInterface $mailer
      * @return RedirectResponse|Response
+     * @throws InvalidArgumentException
      */
-    public function register(Request $request, EventDispatcherInterface $dispatcher, TranslatorInterface $translator,
-                             UserPasswordEncoderInterface $encoder, MailerInterface $mailer)
+    public function register(   Request                         $request,
+                                EventDispatcherInterface        $dispatcher,
+                                TranslatorInterface             $translator,
+                                UserPasswordEncoderInterface    $encoder,
+                                MailerInterface                 $mailer)
     {
         // Check Auth
         if ($this->checkAuth()) {
@@ -93,65 +102,72 @@ class SecurityController extends AbstractController
         // Handle Form Submit
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            // Get Doctrine
-            $em = $this->getDoctrine()->getManager();
+        if ($form->isSubmitted()) {
+            if ($form->isValid()) {
+                // Get Doctrine
+                $em = $this->getDoctrine()->getManager();
 
-            // Encode Password
-            $password = $encoder->encodePassword($user, $form->get('plainPassword')->getData());
-            $user->setPassword($password);
+                // Encode Password
+                $password = $encoder->encodePassword($user, $form->get('plainPassword')->getData());
+                $user->setPassword($password);
 
-            // Create Profile
-            if (!$user->getProfile()) {
-                $profile = $this->getParameter('profile_class');
-                $user->setProfile(new $profile());
-            }
-
-            // User Confirmation
-            if ($this->getParameter('email_confirmation')) {
-                // Disable User
-                $user->setActive(false);
-
-                // Create Confirmation Token
-                if (empty($user->getConfirmationToken()) || null === $user->getConfirmationToken()) {
-                    $user->createConfirmationToken();
+                // Create Profile
+                if (!$user->getProfile()) {
+                    $profile = $this->getParameter('profile_class');
+                    $user->setProfile(new $profile());
                 }
 
-                // Send Confirmation Email
-                $emailBody = [
-                    'confirmationUrl' => $this->generateUrl('security_register_confirm',
-                        ['token' => $user->getConfirmationToken()],
-                        UrlGeneratorInterface::ABSOLUTE_URL),
-                ];
-                $this->sendEmail($user, $mailer, 'Account Confirmation', $emailBody, 'register');
-            } elseif ($this->getParameter('welcome_email')) {
-                // Send Welcome
-                $this->sendEmail($user, $mailer, 'Registration Complete', 'Welcome', 'welcome');
-            }
+                // User Confirmation
+                if ($this->getParameter('email_confirmation')) {
+                    // Disable User
+                    $user->setActive(false);
 
-            // User Add Default Group
-            if ($group = $this->getParameter('default_group')) {
-                $getGroup = $em->getRepository($this->getParameter('group_class'))->find($group);
-                if ($getGroup instanceof GroupInterface) {
-                    $user->addGroup($getGroup);
+                    // Create Confirmation Token
+                    if (empty($user->getConfirmationToken()) || null === $user->getConfirmationToken()) {
+                        $user->createConfirmationToken();
+                    }
+
+                    // Send Confirmation Email
+                    $emailBody = [
+                        'confirmationUrl' => $this->generateUrl('security_register_confirm',
+                            ['token' => $user->getConfirmationToken()],
+                            UrlGeneratorInterface::ABSOLUTE_URL),
+                    ];
+                    $this->sendEmail($user, $mailer, 'Account Confirmation', $emailBody, 'register');
+                } elseif ($this->getParameter('welcome_email')) {
+                    // Send Welcome
+                    $this->sendEmail($user, $mailer, 'Registration Complete', 'Welcome', 'welcome');
                 }
+
+                // User Add Default Group
+                if ($group = $this->getParameter('default_group')) {
+                    $getGroup = $em->getRepository($this->getParameter('group_class'))->find($group);
+                    if ($getGroup instanceof GroupInterface) {
+                        $user->addGroup($getGroup);
+                    }
+                }
+
+                // Save User
+                $em->persist($user);
+                $em->flush();
+
+                // Dispatch Register Event
+                if ($response = $dispatcher->dispatch(new UserEvent($user), UserEvent::REGISTER)->getResponse()) {
+                    return $response;
+                }
+
+                // Register Success
+                return $this->render($this->getParameter('template_path') . '/Registration/registerSuccess.html.twig', [
+                    'user' => $user,
+                ]);
             }
-
-            // Save User
-            $em->persist($user);
-            $em->flush();
-
-            // Dispatch Register Event
-            if ($response = $dispatcher->dispatch(new UserEvent($user), UserEvent::REGISTER)->getResponse()) {
+            
+            // Dispatch Register Failure Event
+            if ($response = $dispatcher->dispatch(new UserEvent($user), UserEvent::REGISTER_FAILURE)->getResponse()) {
                 return $response;
             }
-
-            // Register Success
-            return $this->render($this->getParameter('template_path') . '/Registration/registerSuccess.html.twig', [
-                'user' => $user,
-            ]);
         }
-
+        
         // Render
         return $this->render($this->getParameter('template_path') . '/Registration/register.html.twig', [
             'form' => $form->createView(),
