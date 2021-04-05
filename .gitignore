@@ -3,3 +3,5 @@
 .php_cs.cache
 Entity/*~
 .DS_STORE
+/nbproject/
+/nbproject/private/
