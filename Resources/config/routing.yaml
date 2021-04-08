@@ -13,7 +13,7 @@ security_register_confirm:
     path: "/register/{token}"
     controller: Pd\UserBundle\Controller\SecurityController::registerConfirm
 security_register_success:
-    path: "/register/success"
+    path: "/register-success"
     controller: Pd\UserBundle\Controller\SecurityController::registerSuccess
 
 # Resetting

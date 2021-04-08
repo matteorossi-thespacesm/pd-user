@@ -154,7 +154,7 @@ class SecurityController extends AbstractController
                 $em->flush();
                 
                 //create redirect to register success
-                $response       = new RedirectResponse('security_register_success');
+                $response       = new RedirectResponse($this->generateUrl('security_register_success'));
                 
                 // Dispatch Register Event
                 $event          = new UserEvent($user);
