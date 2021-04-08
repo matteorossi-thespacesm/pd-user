@@ -18,7 +18,7 @@ use Symfony\Component\Security\Core\Exception\AccountStatusException;
 use Pd\UserBundle\Event\UserEvent;
 use Pd\UserBundle\Security\LoginManagerInterface;
 
-class AuthenticationListener implements EventSubscriberInterface
+class AuthenticationSubscriber implements EventSubscriberInterface
 {
     /**
      * @var LoginManagerInterface
