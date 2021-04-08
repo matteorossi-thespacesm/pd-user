@@ -9,7 +9,7 @@
  * @link        https://github.com/appaydin/pd-user
  */
 
-namespace Pd\UserBundle\Listener;
+namespace Pd\UserBundle\EventSubscriber;
 
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
