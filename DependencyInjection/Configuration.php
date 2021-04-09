@@ -31,7 +31,6 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('profile_class')->defaultValue('')->end()
                 ->scalarNode('group_class')->defaultValue('')->end()
                 ->scalarNode('default_group')->defaultValue('')->end()
-                ->scalarNode('firewall_name')->defaultValue('')->end()
                 ->scalarNode('login_redirect')->defaultValue('/')->end()
                 ->booleanNode('email_confirmation')->defaultFalse()->end()
                 ->booleanNode('welcome_email')->defaultTrue()->end()
